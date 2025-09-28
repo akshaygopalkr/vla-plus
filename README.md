@@ -11,11 +11,13 @@
 
 ## 📆 Updates
 
-- **September 28, 2025**: CreateReleased the HuggingFace model! Check it out [here](https://huggingface.co/shrg7/openvla-7b).
+- **September 28, 2025**: Created the repository and released the OpenVLA+ HuggingFace model! Check it out [here](https://huggingface.co/shrg7/openvla-7b). Training and code to be released soon.
 
 ## 📊 Results
 
 ![Dataset Ablation Results](figures/dataset_ablation.png)
+
+- With our modified training pipelines to preserve vision-language representations during robotic training, we achieve improvements accross all robotic tasks in SimplerEnv.
 
 
 ## 📝 Citation
