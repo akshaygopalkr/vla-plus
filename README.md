@@ -5,6 +5,7 @@
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow)](https://huggingface.co/shrg7/openvla-7b)
 
 **Shresth Grover<sup>1*</sup>, Akshay Gopalkrishnan<sup>1*</sup>, Bo Ai<sup>1</sup>, Henrik I. Christensen<sup>1</sup>, Hao Su<sup>1,2</sup>, Xuanlin Li<sup>2</sup>**
+
 <sup>1</sup>UC San Diego, <sup>2</sup>Hillbot
 <sup>*</sup>Equal contribution
 
