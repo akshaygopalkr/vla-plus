@@ -12,6 +12,21 @@
 ## 📆 Updates
 
 - **September 28, 2025**: Created the repository and released the OpenVLA+ HuggingFace model! Check it out [here](https://huggingface.co/shrg7/openvla-7b). Training and code to be released soon.
+## 🧠 Method
+![Method](figures/figure_method_.png)
+
+Our framework is built on **three key ideas** to prevent representation degradation:
+
+1. **Partially-Frozen Visual Encoders**  
+   We use two encoders—one **frozen** to preserve robust, pretrained VLM features and one **trainable** to adapt to the specific robot task.
+
+2. **String-Based Action Tokenizer**  
+   We represent continuous robot actions as **strings**, unifying them with the **text-based pretraining** of the language model.
+
+3. **Co-Training Strategy**  
+   We mix **robot demonstration data** with **vision-language datasets** emphasizing spatial reasoning.  
+   This prevents the model from **overfitting to robot-specific data** and enhances its **generalization capabilities**.
+
 
 ## 📊 Results
 
