@@ -11,7 +11,7 @@
 
 ## 📆 Updates
 
-- **September 28, 2025**: Created the repository and released the OpenVLA+ HuggingFace model! Check it out [here](https://huggingface.co/shrg7/openvla-7b). Training and code to be released soon.
+[comment]- **September 28, 2025**: Created the repository and released the OpenVLA+ HuggingFace model! Check it out [here](https://huggingface.co/shrg7/openvla-7b). Training and code to be released soon.
 ## 🧠 Method
 ![Method](figures/figure_method_2.png)
 
