@@ -15,7 +15,7 @@
 
 ## 📊 Results
 
-![Dataset Ablation Results](figures/dataset_ablation.png)
+![Dataset Ablation Results](figures/figure_method_.png)
 
 - With our modified training pipelines to preserve vision-language representations during robotic training, we achieve improvements accross all robotic tasks in SimplerEnv.
 
