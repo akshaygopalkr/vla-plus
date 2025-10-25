@@ -29,10 +29,10 @@ Our framework is built on **three key ideas** to prevent representation degradat
 
 
 ## 📈 Results Overview
-| Simpler Eval Results | Real Eval Results |
-|:--------------------:|:-----------------:|
-| ![Simpler Eval Plot](figures/simpler_eval_plot.png) | ![Real Eval Plot](figures/Real_eval_plot.png) |
-
+<p align="center">
+  <img src="figures/simpler_eval_plot.png" alt="Simpler Eval Results" width="45%" style="margin-right: 2%;" />
+  <img src="figures/Real_eval_plot.png" alt="Real Eval Results" width="45%" />
+</p>
 > *Plots illustrating performance improvements of OpenVLA+ and π₀+ across the two benchmarks.*
 
 We evaluate our models on two benchmarks: SimplerEnv and Real eval
