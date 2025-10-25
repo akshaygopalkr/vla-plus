@@ -28,11 +28,22 @@ Our framework is built on **three key ideas** to prevent representation degradat
    This prevents the model from **overfitting to robot-specific data** and enhances its **generalization capabilities**.
 
 
-## 📊 Results
+## 📈 Results Overview
+| Simpler Eval Results | Real Eval Results |
+|:--------------------:|:-----------------:|
+| ![Simpler Eval Plot](assets/simpler_eval_plot.png) | ![Real Eval Plot](assets/real_eval_plot.png) |
 
-![Dataset Ablation Results](figures/plot.png)
+> *Plots illustrating performance improvements of OpenVLA+ and π₀+ across the two benchmarks.*
 
-- With our modified training pipelines to preserve vision-language representations during robotic training, we achieve improvements accross all robotic tasks in SimplerEnv.
+We evaluate our models on two benchmarks: SimplerEnv and Real eval
+
+Across both settings, our models — **OpenVLA+** and **π₀+** — consistently outperform their respective baselines.  
+In **Simpler Eval**, our design choices (dual encoder, string tokenizer, co-training) yield up to **40% improvement** over baseline VLAs.  
+In **Real Eval**, **π₀+** achieves a **success rate of 30**, marking a **three-fold improvement** over its baseline.  
+
+These results demonstrate that our **data and architectural strategies** substantially enhance **generalization** and **robustness**, enabling reliable task execution even under real-world variability.
+
+
 
 
 ## 📝 Citation
