@@ -31,7 +31,7 @@ Our framework is built on **three key ideas** to prevent representation degradat
 ## 📈 Results Overview
 | Simpler Eval Results | Real Eval Results |
 |:--------------------:|:-----------------:|
-| ![Simpler Eval Plot](assets/simpler_eval_plot.png) | ![Real Eval Plot](assets/real_eval_plot.png) |
+| ![Simpler Eval Plot](figures/simpler_eval_plot.png) | ![Real Eval Plot](figures/Real_eval_plot.png) |
 
 > *Plots illustrating performance improvements of OpenVLA+ and π₀+ across the two benchmarks.*
 
