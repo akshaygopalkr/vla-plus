@@ -200,36 +200,64 @@ After training, LoRA weights are merged into the base model and written to `<RUN
 
 ## 🔮 Inference
 
-### HuggingFace AutoClass (minimal deps)
+[`vla-scripts/openvla_inference.py`](vla-scripts/openvla_inference.py) is the inference policy used for the paper's
+SimplerEnv evaluations. It wraps the HuggingFace AutoClass policy and applies the SimplerEnv-style action
+post-processing for `google_robot` and `widowx_bridge` setups.
 
 ```bash
 pip install -r requirements-min.txt
+export HF_TOKEN=<your HuggingFace token>
 ```
+
+### Direct usage (Python)
 
 ```python
-from transformers import AutoModelForVision2Seq, AutoProcessor
-from PIL import Image
-import torch
+import numpy as np
+from vla_scripts.openvla_inference import OPENVLAInference
 
-processor = AutoProcessor.from_pretrained("shrg7/openvla-7b", trust_remote_code=True)
-vla = AutoModelForVision2Seq.from_pretrained(
-    "shrg7/openvla-7b",
-    attn_implementation="flash_attention_2",   # optional, requires flash-attn
-    torch_dtype=torch.bfloat16,
-    low_cpu_mem_usage=True,
-    trust_remote_code=True,
-).to("cuda:0")
+# policy_setup ∈ {"google_robot", "widowx_bridge"} — selects gripper logic + action denorm
+model = OPENVLAInference(
+    policy_setup="google_robot",
+    openvla_path="shrg7/openvla-7b",
+)
+model.reset(task_description="pick up the coke can")
 
-image: Image.Image = ...                       # H×W×3 RGB
-prompt = "In: What action should the robot take to {pick up the red block}?\nOut:"
+# image: (H, W, 3) uint8 from your camera / simulator
+image: np.ndarray = ...
+raw_action, action = model.step(image, task_description="pick up the coke can")
 
-inputs = processor(prompt, image).to("cuda:0", dtype=torch.bfloat16)
-action = vla.predict_action(**inputs, unnorm_key="bridge_orig", do_sample=False)
-# action is a 7-DoF vector — pass to your controller
+# action["world_vector"]       — (3,) xyz translation
+# action["rot_axangle"]        — (3,) axis-angle rotation
+# action["gripper"]            — (1,) gripper command
+# action["terminate_episode"]  — (1,) episode termination flag
 ```
 
-Set `unnorm_key` to match the dataset the model was trained on (e.g. `bridge_orig`, `rt_1`). The available keys come
-from `dataset_statistics.json` in the checkpoint.
+### Inside the SimplerEnv eval harness
+
+To reproduce the paper's Simpler Eval rollouts, clone upstream
+[SimplerEnv](https://github.com/simpler-env/SimplerEnv) and drop this policy in:
+
+```bash
+git clone https://github.com/simpler-env/SimplerEnv.git
+mkdir -p SimplerEnv/simpler_env/policies/openvla
+cp vla-scripts/openvla_inference.py SimplerEnv/simpler_env/policies/openvla/openvla_model.py
+touch SimplerEnv/simpler_env/policies/openvla/__init__.py
+```
+
+Then add an `openvla` branch to `SimplerEnv/simpler_env/main_inference.py`:
+
+```python
+from simpler_env.policies.openvla.openvla_model import OPENVLAInference
+# ...
+elif "openvla" in args.policy_model:
+    model = OPENVLAInference(policy_setup=args.policy_setup)
+```
+
+Launch a rollout with the standard SimplerEnv script (e.g. `scripts/openvla_drawer_visual_matching.sh`-style),
+passing `--policy-model openvla`.
+
+Set `unnorm_key` inside `step()` to match the dataset the model was trained on (e.g. `bridge_orig`, `rt_1`,
+`fractal20220817_data`). Available keys live in `dataset_statistics.json` in the checkpoint.
 
 ### REST server / client
 
