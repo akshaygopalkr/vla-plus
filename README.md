@@ -45,6 +45,22 @@ These results demonstrate that our **data and architectural strategies** substan
 
 ---
 
+## 🤗 Model Weights
+
+| Model | HuggingFace |
+| --- | --- |
+| **OpenVLA+ (7B)** | [shrg7/openvla-7b](https://huggingface.co/shrg7/openvla-7b) |
+
+Load directly via `transformers` AutoClasses — see [Inference](#-inference) for a full example:
+
+```python
+from transformers import AutoModelForVision2Seq, AutoProcessor
+processor = AutoProcessor.from_pretrained("shrg7/openvla-7b", trust_remote_code=True)
+vla = AutoModelForVision2Seq.from_pretrained("shrg7/openvla-7b", trust_remote_code=True)
+```
+
+---
+
 ## 🚀 Installation
 
 This repository was developed against Python 3.10 and PyTorch 2.2.* (CUDA toolkit ≥ 11.0 for BF16). Pinned versions:
