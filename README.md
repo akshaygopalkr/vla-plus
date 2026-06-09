@@ -259,29 +259,6 @@ passing `--policy-model openvla`.
 Set `unnorm_key` inside `step()` to match the dataset the model was trained on (e.g. `bridge_orig`, `rt_1`,
 `fractal20220817_data`). Available keys live in `dataset_statistics.json` in the checkpoint.
 
-### REST server / client
-
-`vla-scripts/deploy.py` exposes a FastAPI server that wraps the HF model:
-
-```bash
-pip install uvicorn fastapi json-numpy
-python vla-scripts/deploy.py \
-  --openvla_path shrg7/openvla-7b \
-  --host 0.0.0.0 --port 8000
-```
-
-Client:
-
-```python
-import requests, json_numpy, numpy as np
-json_numpy.patch()
-
-action = requests.post(
-    "http://0.0.0.0:8000/act",
-    json={"image": np.zeros((256, 256, 3), dtype=np.uint8), "instruction": "do something"},
-).json()
-```
-
 ---
 
 ## 🗂️ Repository Structure
