@@ -43,6 +43,239 @@ These results demonstrate that our **data and architectural strategies** substan
 
 
 
+---
+
+## 🤗 Model Weights
+
+| Model | HuggingFace |
+| --- | --- |
+| **OpenVLA+ (7B)** | [shrg7/openvla-7b](https://huggingface.co/shrg7/openvla-7b) |
+
+Load directly via `transformers` AutoClasses — see [Inference](#-inference) for a full example:
+
+```python
+from transformers import AutoModelForVision2Seq, AutoProcessor
+processor = AutoProcessor.from_pretrained("shrg7/openvla-7b", trust_remote_code=True)
+vla = AutoModelForVision2Seq.from_pretrained("shrg7/openvla-7b", trust_remote_code=True)
+```
+
+---
+
+## 🚀 Installation
+
+This repository was developed against Python 3.10 and PyTorch 2.2.* (CUDA toolkit ≥ 11.0 for BF16). Pinned versions:
+PyTorch 2.2.0, torchvision 0.17.0, transformers 4.40.1, tokenizers 0.19.1, timm 0.9.10, flash-attn 2.5.5.
+
+Install PyTorch first ([instructions](https://pytorch.org/get-started/locally/)) and then this package:
+
+```bash
+git clone https://github.com/<your-org>/vla-plus.git
+cd vla-plus
+pip install -e .
+
+# Training additionally requires Flash-Attention 2
+pip install packaging ninja
+ninja --version; echo $?          # should print 0
+pip install "flash-attn==2.5.5" --no-build-isolation
+```
+
+> If you only want to run inference, the lightweight install in [Inference](#-inference) is sufficient.
+
+---
+
+## 📦 Data Processing
+
+Training uses datasets from the [Open X-Embodiment (OXE) collection](https://robotics-transformer-x.github.io/) in
+[RLDS format](https://github.com/google-research/rlds). See
+[`prismatic/vla/datasets/rlds/oxe/mixtures.py`](prismatic/vla/datasets/rlds/oxe/mixtures.py) for the full list of
+component datasets and mixture weights.
+
+### 1. Download and convert OXE data to RLDS
+
+We follow the standard OXE prep pipeline. Use
+[`prepare_open_x.sh`](https://github.com/moojink/rlds_dataset_mod/blob/main/prepare_open_x.sh) to download and resize
+component datasets into a single directory (referred to below as `<DATA_ROOT>`):
+
+```bash
+# Each RLDS dataset lives under <DATA_ROOT>/<dataset_name>/<version>/...
+ls <DATA_ROOT>
+# e.g.  bridge_orig/  rt_1/  fractal20220817_data/  ...
+```
+
+> **Important — BridgeData V2**: the copy in OXE is stale. Download from the
+> [official mirror](https://rail.eecs.berkeley.edu/datasets/bridge_release/data/tfds/bridge_dataset/) and place it under
+> `bridge_orig/`. Replace any reference to `bridge` in the OXE code with `bridge_orig`.
+
+### 2. (Optional) Add new datasets
+
+To register a new RLDS dataset:
+
+1. Add an entry to `prismatic/vla/datasets/rlds/oxe/configs.py` describing observation/action keys.
+2. Add a transform in `prismatic/vla/datasets/rlds/oxe/transforms.py` mapping raw fields to the canonical
+   `{observation, action, language_instruction}` schema.
+3. Add the dataset (with weight) to the desired mixture in
+   `prismatic/vla/datasets/rlds/oxe/mixtures.py`.
+
+### 3. Cache dataset statistics
+
+Statistics (action mean/std, q01/q99 for un-normalization) are computed automatically on first run and saved alongside
+the run directory (`dataset_statistics.json`). For inference, pass the matching `unnorm_key` so actions are
+de-normalized correctly.
+
+---
+
+## 🏋️ Training
+
+### Full pretraining (FSDP)
+
+The entry point is [`vla-scripts/train.py`](vla-scripts/train.py). Configurations are dataclasses registered in
+[`prismatic/conf/vla.py`](prismatic/conf/vla.py); pick one with `--vla.type`.
+
+Single-node, 8-GPU launch via the provided convenience script:
+
+```bash
+bash vla-scripts/train_8gpus.sh \
+  exp_name=prism-dinosiglip-224px+mx-rt_1
+```
+
+Or invoke `torchrun` directly:
+
+```bash
+torchrun --standalone --nnodes 1 --nproc-per-node 8 vla-scripts/train.py \
+  --vla.type "prism-dinosiglip-224px+mx-bridge" \
+  --data_root_dir <DATA_ROOT> \
+  --run_root_dir <RUNS_DIR> \
+  --wandb_project "<PROJECT>" \
+  --wandb_entity "<ENTITY>"
+```
+
+Multi-node (2×8 GPUs) via [`vla-scripts/train_16gpus.sh`](vla-scripts/train_16gpus.sh) — set `MASTER_ADDR`,
+`MASTER_PORT`, and `NODE_RANK` on each node (or rely on your scheduler to set them):
+
+```bash
+MASTER_ADDR=<head_node> MASTER_PORT=29500 NODE_RANK=<0|1> \
+  bash vla-scripts/train_16gpus.sh exp_name=prism-dinosiglip-224px+mx-rt_1
+```
+
+### Resuming a run
+
+```bash
+torchrun --standalone --nnodes 1 --nproc-per-node 8 vla-scripts/train.py \
+  --vla.type "prism-dinosiglip-224px+mx-bridge" \
+  --pretrained_checkpoint <PATH/TO/checkpoint.pt> \
+  --is_resume True \
+  --resume_step <STEP> \
+  --resume_epoch <EPOCH> \
+  --data_root_dir <DATA_ROOT> \
+  --run_root_dir <RUNS_DIR>
+```
+
+### LoRA fine-tuning
+
+[`vla-scripts/finetune.py`](vla-scripts/finetune.py) loads an existing OpenVLA checkpoint from the HuggingFace Hub
+(or a local path) and fine-tunes with LoRA. Approx. memory footprint: bsz 12 on one 48 GB GPU, bsz 24 on one 80 GB GPU.
+
+```bash
+pip install peft==0.11.1
+
+torchrun --standalone --nnodes 1 --nproc-per-node 8 vla-scripts/finetune.py \
+  --vla_path "openvla/openvla-7b" \
+  --data_root_dir <DATA_ROOT> \
+  --dataset_name <RLDS_DATASET_NAME> \
+  --run_root_dir <RUNS_DIR> \
+  --adapter_tmp_dir <ADAPTER_TMP_DIR> \
+  --use_lora True
+```
+
+After training, LoRA weights are merged into the base model and written to `<RUNS_DIR>/<exp_id>`.
+
+### Known issues
+
+- `FileNotFoundError: ... fractal20220817_data/0.1.0/dataset_info.json` →
+  `pip install tensorflow-datasets==4.9.3`.
+- `AttributeError: 'DLataset' object has no attribute 'traj_map'` →
+  `pip install --no-deps --force-reinstall git+https://github.com/kvablack/dlimp@5edaa4691567873d495633f2708982b42edf1972`.
+
+---
+
+## 🔮 Inference
+
+[`vla-scripts/openvla_inference.py`](vla-scripts/openvla_inference.py) is the inference policy used for the paper's
+SimplerEnv evaluations. It wraps the HuggingFace AutoClass policy and applies the SimplerEnv-style action
+post-processing for `google_robot` and `widowx_bridge` setups.
+
+```bash
+pip install -r requirements-min.txt
+export HF_TOKEN=<your HuggingFace token>
+```
+
+### Direct usage (Python)
+
+```python
+import numpy as np
+from vla_scripts.openvla_inference import OPENVLAInference
+
+# policy_setup ∈ {"google_robot", "widowx_bridge"} — selects gripper logic + action denorm
+model = OPENVLAInference(
+    policy_setup="google_robot",
+    openvla_path="shrg7/openvla-7b",
+)
+model.reset(task_description="pick up the coke can")
+
+# image: (H, W, 3) uint8 from your camera / simulator
+image: np.ndarray = ...
+raw_action, action = model.step(image, task_description="pick up the coke can")
+
+# action["world_vector"]       — (3,) xyz translation
+# action["rot_axangle"]        — (3,) axis-angle rotation
+# action["gripper"]            — (1,) gripper command
+# action["terminate_episode"]  — (1,) episode termination flag
+```
+
+### Inside the SimplerEnv eval harness
+
+To reproduce the paper's Simpler Eval rollouts, clone upstream
+[SimplerEnv](https://github.com/simpler-env/SimplerEnv) and drop this policy in:
+
+```bash
+git clone https://github.com/simpler-env/SimplerEnv.git
+mkdir -p SimplerEnv/simpler_env/policies/openvla
+cp vla-scripts/openvla_inference.py SimplerEnv/simpler_env/policies/openvla/openvla_model.py
+touch SimplerEnv/simpler_env/policies/openvla/__init__.py
+```
+
+Then add an `openvla` branch to `SimplerEnv/simpler_env/main_inference.py`:
+
+```python
+from simpler_env.policies.openvla.openvla_model import OPENVLAInference
+# ...
+elif "openvla" in args.policy_model:
+    model = OPENVLAInference(policy_setup=args.policy_setup)
+```
+
+Launch a rollout with the standard SimplerEnv script (e.g. `scripts/openvla_drawer_visual_matching.sh`-style),
+passing `--policy-model openvla`.
+
+Set `unnorm_key` inside `step()` to match the dataset the model was trained on (e.g. `bridge_orig`, `rt_1`,
+`fractal20220817_data`). Available keys live in `dataset_statistics.json` in the checkpoint.
+
+---
+
+## 🗂️ Repository Structure
+
+- `prismatic/` — package source: model loading, training strategies, VLA config registry, RLDS data pipeline.
+- `vla-scripts/` — training (`train.py`), LoRA fine-tuning (`finetune.py`), REST deploy (`deploy.py`), and launcher
+  shell scripts (`train_8gpus.sh`, `train_16gpus.sh`).
+- `scripts/` — base prismatic-vlms utilities for VLM pretraining / generation (not required for VLA training).
+- `pyproject.toml` — package config and dependencies.
+- `figures/` — paper figures.
+
+---
+
+## 🙏 Acknowledgements
+
+This codebase is built on top of [OpenVLA](https://github.com/openvla/openvla) and
+[Prismatic VLMs](https://github.com/TRI-ML/prismatic-vlms).
 
 ## 📝 Citation
 
