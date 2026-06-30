@@ -261,7 +261,7 @@ Set `unnorm_key` inside `step()` to match the dataset the model was trained on (
 
 ---
 
-## 🗂️ Repository Structure
+## Repository Structure
 
 - `prismatic/` — package source: model loading, training strategies, VLA config registry, RLDS data pipeline.
 - `vla-scripts/` — training (`train.py`), LoRA fine-tuning (`finetune.py`), REST deploy (`deploy.py`), and launcher
@@ -272,12 +272,12 @@ Set `unnorm_key` inside `step()` to match the dataset the model was trained on (
 
 ---
 
-## 🙏 Acknowledgements
+## Acknowledgements
 
 This codebase is built on top of [OpenVLA](https://github.com/openvla/openvla) and
 [Prismatic VLMs](https://github.com/TRI-ML/prismatic-vlms).
 
-## 📝 Citation
+## Citation
 
 ```bibtex
 @article{grover2025enhancing,
