@@ -12,7 +12,7 @@
 ## 📆 Updates
 
 <!--  **September 28, 2025**: Created the repository and released the OpenVLA+ HuggingFace model! Check it out [here](https://huggingface.co/shrg7/openvla-7b). Training and code to be released soon. -->
-## 🧠 Method
+## Method
 ![Method](figures/new_method.png)
 
 Our framework is built on **three key ideas** to prevent representation degradation:
@@ -61,7 +61,7 @@ vla = AutoModelForVision2Seq.from_pretrained("shrg7/openvla-7b", trust_remote_co
 
 ---
 
-## 🚀 Installation
+## Installation
 
 This repository was developed against Python 3.10 and PyTorch 2.2.* (CUDA toolkit ≥ 11.0 for BF16). Pinned versions:
 PyTorch 2.2.0, torchvision 0.17.0, transformers 4.40.1, tokenizers 0.19.1, timm 0.9.10, flash-attn 2.5.5.
@@ -83,7 +83,7 @@ pip install "flash-attn==2.5.5" --no-build-isolation
 
 ---
 
-## 📦 Data Processing
+## Data Processing
 
 Training uses datasets from the [Open X-Embodiment (OXE) collection](https://robotics-transformer-x.github.io/) in
 [RLDS format](https://github.com/google-research/rlds). See
@@ -124,7 +124,7 @@ de-normalized correctly.
 
 ---
 
-## 🏋️ Training
+## Training
 
 ### Full pretraining (FSDP)
 
@@ -198,7 +198,7 @@ After training, LoRA weights are merged into the base model and written to `<RUN
 
 ---
 
-## 🔮 Inference
+## Inference
 
 [`vla-scripts/openvla_inference.py`](vla-scripts/openvla_inference.py) is the inference policy used for the paper's
 SimplerEnv evaluations. It wraps the HuggingFace AutoClass policy and applies the SimplerEnv-style action
