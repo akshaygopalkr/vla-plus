@@ -9,8 +9,6 @@
 <sup>1</sup>UC San Diego, <sup>2</sup>Hillbot
 <sup>*</sup>Equal contribution
 
-## 📆 Updates
-
 <!--  **September 28, 2025**: Created the repository and released the OpenVLA+ HuggingFace model! Check it out [here](https://huggingface.co/shrg7/openvla-7b). Training and code to be released soon. -->
 ## Method
 ![Method](figures/new_method.png)
